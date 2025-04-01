@@ -1,0 +1,1 @@
+'''Połączenie z Neo4j'''

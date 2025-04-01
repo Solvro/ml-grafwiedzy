@@ -1,0 +1,1 @@
+'''Testy połączenia z Neo4j'''
