@@ -50,11 +50,17 @@ class Scrapper:
         Args:
             url: The URL to scrape for links
         """
+        
+        if not url.startswith(("http://", "https://", "//")):
+            url = self.key + url
+            
         # Skip if URL already visited, doesn't contain keyword, or is a file
         if (url in self.visited or 
             not self.key in url or 
             any(ext in url for ext in FILE_EXTENSIONS)):
             return
+        
+    
 
         try:
             # Random delay to avoid rate limiting
@@ -203,3 +209,4 @@ class Scrapper:
                 print(f"Failed to process {url}: {str(e)}")
                 continue
             
+
