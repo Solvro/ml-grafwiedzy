@@ -74,11 +74,9 @@ Projekt wykorzystuje Neo4j uruchomiony w kontenerze Dockera.
 Najpierw upewnij się, że masz zainstalowany **Docker** i **Docker Compose**. Następnie w katalogu głównym projektu utwórz plik docker-compose.yml (jeśli jeszcze go nie ma) i dodaj:
 
 ```yaml
-version: '3.8'
-
 services:
   neo4j:
-    image: neo4j:5.16
+    image: neo4j:2025.03.0
     container_name: neo4j_container
     restart: unless-stopped
     ports:
