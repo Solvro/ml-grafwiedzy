@@ -1,0 +1,1 @@
+'''Skrypt do budowania grafu w Neo4j'''
