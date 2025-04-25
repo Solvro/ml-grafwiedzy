@@ -9,6 +9,7 @@ from langchain_neo4j import Neo4jGraph
 from langchain_core.output_parsers import StrOutputParser
 
 
+
 class State(MessagesState):
     """Represents the state of the RAG pipeline with all necessary components."""
     user_question: str
