@@ -448,7 +448,6 @@ class RAG:
         return result.get("answer")
     
     
-    
     def loop_end(self, state: State):
         """
         Returns prompt when cypher_attempt limit is reached.
