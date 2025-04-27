@@ -18,6 +18,7 @@ class State(MessagesState):
     conversation_history: List[str]  
     is_valid_cypher: bool = True
     cypher_validation_error: str  
+    cypher_attempt: int = 0
     
     
 
@@ -140,6 +141,7 @@ class RAG:
         builder.add_node("generate_response", self.generate_answer)
         builder.add_node("update_history", self.update_history)
         builder.add_node("debug_print", self.debug_print)
+        builder.add_node("loop_end", self.loop_end)
         
         builder.add_edge(START, "guardrails_system")
         builder.add_conditional_edges(
@@ -155,10 +157,19 @@ class RAG:
         
         builder.add_conditional_edges(
             "validate_cypher",
-            lambda state: "correct_cypher" if not state.get("is_valid_cypher", True) else "retrieve",
+            lambda state: (
+                "correct_cypher"
+                if not state.get("is_valid_cypher", True) and state.get("cypher_attempt", 0) < 5 # limit attempts to 5
+                else (
+                      "loop_end"
+                      if not state.get("is_valid_cypher", True) and state.get("cypher_attempt", 0) >= 5
+                      else "retrieve"
+                )
+            ),
             {
                 "correct_cypher": "correct_cypher",
-                "retrieve": "retrieve"
+                "loop_end": "loop_end",
+                "retrieve": "retrieve" 
             }
         )
         
@@ -167,6 +178,8 @@ class RAG:
         builder.add_edge("retrieve", "generate_response")
         builder.add_edge("generate_response", "update_history")
         builder.add_edge("update_history", "debug_print")
+        
+        builder.add_edge("loop_end", END)
         builder.add_edge("debug_print", END)
         
         return builder.compile(checkpointer=self.memory)
@@ -366,6 +379,8 @@ class RAG:
             return {}
         formatted_history = self.format_conversation_history(state["conversation_history"])
 
+        attempts = state.get("cypher_attempt", 0) + 1
+        
         correction_template = PromptTemplate(
             input_variables=["user_question", "schema", "original_cypher", "error_message"],
             template="""
@@ -400,8 +415,9 @@ class RAG:
         
         print(f"\n[CYPHER CORRECTION]\nOriginal: {state['generated_cypher']}\nCorrected: {corrected_cypher}")
         
-        return {"generated_cypher": corrected_cypher}
-            
+        return {"generated_cypher": corrected_cypher, "cypher_attempt": attempts}
+        
+        
     def invoke(self, message: str, session_id: str = "default"):
         """
         Execute the RAG pipeline with user message and maintain conversation history.
@@ -430,3 +446,9 @@ class RAG:
         self.conversation_store[session_id] = result.get("conversation_history", conversation_history)
         
         return result.get("answer")
+    
+    def loop_end(self, state: State):
+        """
+        Returns prompt when cypher_attempt limit is reached.
+        """
+        return {'answer': "I'm sorry, but I couldn't generate a valid Cypher query after multiple attempts. Please try rephrasing your question or ask something else."}
