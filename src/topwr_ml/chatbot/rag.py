@@ -8,6 +8,54 @@ from langchain_neo4j import Neo4jGraph
 from langchain_core.output_parsers import StrOutputParser
 
 
+class GraphVisualizer:
+    """Helper class for building Mermaid diagrams from graph structure"""
+    def __init__(self):
+        self.nodes = set()
+        self.edges = set()
+
+    def add_node(self, node_name):
+        self.nodes.add(node_name)
+
+    def add_edge(self, from_node, to_node):
+        from_str = "start_node" if from_node is START else str(from_node)
+        to_str = "end_node" if to_node is END else str(to_node)
+        self.edges.add((from_str, to_str, None))
+
+    def add_conditional_edges(self, source_node, edges_dict):
+        source_str = "start_node" if source_node is START else str(source_node)
+        for condition, target_node in edges_dict.items():
+            target_str = "end_node" if target_node is END else str(target_node)
+            self.edges.add((source_str, target_str, condition))
+
+    def draw_mermaid(self):
+        """Generate Mermaid JS code representing the graph"""
+        mermaid = ["%%{init: {'flowchart': {'curve': 'linear'}}}%%", "graph TD;"]
+        
+        # Add special nodes
+        mermaid.append("    start_node([<p>start</p>]):::first;")
+        mermaid.append("    end_node([<p>end</p>]):::last;")
+        
+        # Add regular nodes
+        for node in sorted(self.nodes - {"start_node", "end_node"}):
+            mermaid.append(f"    {node}({node})")
+        
+        # Add edges
+        for from_node, to_node, condition in self.edges:
+            arrow = "-.->" if condition else "-->"
+            if condition:
+                mermaid.append(f"    {from_node} {arrow} |{condition}| {to_node};")
+            else:
+                mermaid.append(f"    {from_node} {arrow} {to_node};")
+        
+        # Add style classes
+        mermaid.append("    classDef default fill:#f2f0ff,line-height:1.2;")
+        mermaid.append("    classDef first fill-opacity:0;")
+        mermaid.append("    classDef last fill:#bfb6fc;")
+        
+        return "\n".join(mermaid)
+
+
 class State(MessagesState):
     """Represents the state of the RAG pipeline with all necessary components."""
     user_question: str
@@ -54,8 +102,12 @@ class RAG:
         )
         
         self.conversation_store = {}
-        
+        self.visualizer = GraphVisualizer()
         self.graph = self._build_processing_graph()
+        
+    def get_graph(self):
+        """Return graph visualizer with Mermaid capabilities"""
+        return self.visualizer
         
     def _initialize_prompt_templates(self):
         """Initialize all prompt templates used in the RAG pipeline."""
@@ -132,58 +184,77 @@ class RAG:
     def _build_processing_graph(self):
         """Construct the state machine graph for the RAG pipeline."""
         builder = StateGraph(State)
+        visualizer = self.visualizer
         
-        builder.add_node("guardrails_system", self.guardrails_system)
-        builder.add_node("generate_cypher", self.generate_cypher)
-        builder.add_node("validate_cypher", self.validate_cypher)  
-        builder.add_node("correct_cypher", self.correct_cypher)  
-        builder.add_node("retrieve", self.retrieve)
-        builder.add_node("generate_response", self.generate_answer)
-        builder.add_node("update_history", self.update_history)
-        builder.add_node("debug_print", self.debug_print)
-        builder.add_node("loop_end", self.loop_end)
+        
+        nodes = [
+            ("guardrails_system", self.guardrails_system),
+            ("generate_cypher", self.generate_cypher),
+            ("validate_cypher", self.validate_cypher),
+            ("correct_cypher", self.correct_cypher),
+            ("retrieve", self.retrieve),
+            ("generate_response", self.generate_answer),
+            ("update_history", self.update_history),
+            ("debug_print", self.debug_print),
+        ]
+        
+        for node_name, node_func in nodes:
+            builder.add_node(node_name, node_func)
+            visualizer.add_node(node_name)
         
         builder.add_edge(START, "guardrails_system")
+        visualizer.add_edge(START, "guardrails_system")
+        
+        guardrail_edges = {
+            "generate_cypher": "generate_cypher",
+            "end": "generate_response"
+        }
+        
         builder.add_conditional_edges(
             "guardrails_system",
             lambda state: state["next_node"],
-            {
-                "generate_cypher": "generate_cypher",
-                "end": "generate_response"
-            }
+            guardrail_edges
         )
+        visualizer.add_conditional_edges("guardrails_system", guardrail_edges)
         
         builder.add_edge("generate_cypher", "validate_cypher")
+        visualizer.add_edge("generate_cypher", "validate_cypher")
+        
+        validation_edges = {
+            "correct_cypher": "correct_cypher",
+            "retrieve": "retrieve",
+            "generate_response": "generate_response"
+        }
         
         builder.add_conditional_edges(
             "validate_cypher",
             lambda state: (
                 "correct_cypher"
-                if not state.get("is_valid_cypher", True) and state.get("cypher_attempt", 0) < 5 # limit attempts to 5
-                else (
-                      "loop_end"
-                      if not state.get("is_valid_cypher", True) and state.get("cypher_attempt", 0) >= 5
-                      else "retrieve"
-                )
+                if not state.get("is_valid_cypher", True) and state.get("cypher_attempt", 0) < 5
+                else "generate_response"
             ),
-            {
-                "correct_cypher": "correct_cypher",
-                "loop_end": "loop_end",
-                "retrieve": "retrieve" 
-            }
+            validation_edges
         )
+        visualizer.add_conditional_edges("validate_cypher", validation_edges)
         
         builder.add_edge("correct_cypher", "validate_cypher")
+        visualizer.add_edge("correct_cypher", "validate_cypher")
         
         builder.add_edge("retrieve", "generate_response")
-        builder.add_edge("generate_response", "update_history")
-        builder.add_edge("update_history", "debug_print")
+        visualizer.add_edge("retrieve", "generate_response")
         
-        builder.add_edge("loop_end", END)
+        builder.add_edge("generate_response", "update_history")
+        visualizer.add_edge("generate_response", "update_history")
+        
+        builder.add_edge("update_history", "debug_print")
+        visualizer.add_edge("update_history", "debug_print")
+        
         builder.add_edge("debug_print", END)
+        visualizer.add_edge("debug_print", END)
         
         return builder.compile(checkpointer=self.memory)
-        
+
+
     def format_conversation_history(self, history: List[str]) -> str:
         """
         Format conversation history as a string for inclusion in prompts.
@@ -245,6 +316,10 @@ class RAG:
         Returns:
             Updated state with generated answer
         """
+        
+        if state.get("cypher_attempt", 0) >= 5:
+            return {"answer": "Cypher query generation failed after multiple attempts."}
+        
         formatted_history = self.format_conversation_history(state["conversation_history"])
         
         chain = self.generate_template | self.llm | StrOutputParser()
@@ -446,10 +521,3 @@ class RAG:
         self.conversation_store[session_id] = result.get("conversation_history", conversation_history)
         
         return result.get("answer")
-    
-    
-    def loop_end(self, state: State):
-        """
-        Returns prompt when cypher_attempt limit is reached.
-        """
-        return {'answer': "I'm sorry, but I couldn't generate a valid Cypher query after multiple attempts. Please try rephrasing your question or ask something else."}
