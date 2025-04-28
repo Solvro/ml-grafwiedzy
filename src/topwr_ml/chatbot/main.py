@@ -1,6 +1,8 @@
 from .rag import RAG
 from dotenv import load_dotenv
 from os import environ
+
+
 def main():
     load_dotenv(".env")
     API_KEY =environ.get("DEEPSEEK_API_KEY")
@@ -9,9 +11,15 @@ def main():
     NEO4J_PASSWORD = environ.get("NEO4J_PASSWORD")
     rag = RAG(api_key=API_KEY, neo4j_url=NEO4J_URI,neo4j_username=NEO4J_USERNAME,
         neo4j_password=NEO4J_PASSWORD)
+    
     while(True):
+        
+        print(rag.get_graph().draw_mermaid())
+        
         response = rag.invoke(input("User: "))
         print(f"Polichator : {response}")
+    
+    
 
 if __name__ == "__main__":
     main()
