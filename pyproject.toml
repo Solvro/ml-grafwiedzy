@@ -27,5 +27,12 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length = 88  # Można dostosować
 
+[tool.poetry.group.scrapper.dependencies]
+beautifulsoup4 = "^4.12.0"  
+requests = "^2.31.0"       
+selenium = "^4.18.0"        
+
+[tool.poetry.scripts]
+scrapper = "scripts.scrapper.main:main"  
 [tool.poetry.scripts]
 rag = "src.topwr_ml.chatbot.main:main"

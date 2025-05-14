@@ -84,6 +84,28 @@ poetry run rag
 - src/: Folder zawierający kod źródłowy projektu.
 
 
+## Jak uruchomić scrapper ? 
+
+### Zainstaluj zależności scrappera
+```bash
+poetry install --only scraper
+```
+### Uruchom scrapper.py
+```bash
+poetry run scrapper <sciezka_dostepu> <poziom_zaglebienia> <ilosc_watkow> <strona_poczatkowa>
+```
+gdzie :
+- sciezka_dostepu -> miejsce, gdzie zostaną zapisane dane 
+- poziom_zaglebienia -> poziom zagłębienia się scrappera
+- ilosc_watkow -> ilość wątków do pobierania danych
+- strona_poczatkowa -> punkt zaczepienia scrappera i jego klucz
+
+Na przykład :
+
+```bash
+poetry run scrapper "dane_test/" 0 2 "https://wit.pwr.edu.pl/"  
+```
+
 - data/: Folder przeznaczony na dane używane przez projekt.
 - notebooks/: Folder zawierający notatniki Jupyter do eksploracji danych i prototypowania.
 - scripts/: Folder zawierający skrypty uruchomieniowe i pomocnicze.
@@ -220,5 +242,6 @@ def test_graph_connection():
     from src.topwr_ml.graph.connection import graph
     assert graph is not None
 ```
+
 ## Diagram systemu RAG
 <img src="chart.png" alt="drawing" width="400"/>
