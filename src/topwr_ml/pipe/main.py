@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import os
-from topwr_ml.pipe.pipe import DataPipe
+from src.topwr_ml.pipe.pipe import DataPipe
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
         nodes=nodes,
         relations=relationships,
         url=os.getenv("NEO4J_URI"),
-        username=os.getenv("NEO4J_USERNAME"),
+        username=os.getenv("NEO4J_USER"),
         password=os.getenv("NEO4J_PASSWORD"),
     )
 

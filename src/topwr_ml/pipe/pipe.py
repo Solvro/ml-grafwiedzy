@@ -1,6 +1,6 @@
-from topwr_ml.pipe.pdf_loader import PDFLoader
+from src.topwr_ml.pipe.pdf_loader import PDFLoader
 from typing import List
-from topwr_ml.pipe.llm_pipe import LLMPipe
+from src.topwr_ml.pipe.llm_pipe import LLMPipe
 import os
 from langchain_neo4j import Neo4jGraph
 

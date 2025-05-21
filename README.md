@@ -63,7 +63,7 @@ Stwórz plik .env w folderze głównym i wklej klucz api do deepseeka, i crident
 ```
 DEEPSEEK_API_KEY=
 NEO4J_URI=
-NEO4J_USERNAME=
+NEO4J_USER=
 NEO4J_PASSWORD=
 ```
 Następnie zainstaluj paczki poetrowe 
