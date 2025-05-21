@@ -32,3 +32,4 @@ line-length = 88  # Można dostosować
 
 [tool.poetry.scripts]
 rag = "src.topwr_ml.chatbot.main:main"
+pipe = "src.topwr_ml.pipe.main:main"

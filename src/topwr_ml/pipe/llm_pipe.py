@@ -31,32 +31,49 @@ class LLMPipe:
 
         self.generate_template = PromptTemplate(
             input_variables=["context", "nodes", "relations"],
-            template="""Based ONLY on the provided context extracted from PDF or text file, identify entities and relationships.
-            Don't use your general knowledge if not found in context.
-            
-            Context: {context}
-            
-            Allowed node types in graph database: {nodes}
-            Allowed relation types in graph database: {relations}
-            
-            Your task is to analyze the context and generate Cypher code that will create new nodes and relationships 
-            in the Neo4j graph database based on the information found in the context. Only use the allowed node and relation types.
-            
-            The Cypher code should follow these guidelines:
-            // Create nodes for identified entities
-            // Create relationships between entities
-            // Use MERGE statements to avoid duplicates
-            
-            The Cypher code should be executable in Neo4j and properly handle the creation of all relevant nodes and relationships.
-            Answer only with the Cypher code, without any additional explanations or comments.
-            
-            Divide cypher code into multiple lines if necessary - if you do 
-            divide it with | character.
-            Do not use any other characters or symbols to divide the code.  
+            template= """
+                Generate Neo4j Cypher statements based EXCLUSIVELY on the provided context.
+                Use ONLY the allowed node types and relation types.
+                DO NOT include any additional text or explanations.
 
-            Nodes should have property of context and you should pass to that property proper text of given context.
-            Make also appropariate titles for nodes .
-            """,
+                CONTEXT: {context}
+
+                ALLOWED NODE LABELS: {nodes}
+                ALLOWED RELATIONSHIP TYPES: {relations}
+
+                STRICT RULES:
+                1. OUTPUT MUST:
+                   - Contain ONLY executable Cypher statements
+                   - Begin with "MERGE"
+                   - Separate multiple statements with PIPE character (|)
+                   - Use UNIQUE variable names (node1, node2, etc. - never reused)
+                   - LIMIT TOKENDS TO 65536 TOKENS TO AVOID ERRORS WITH DEEPSEEK API
+                
+                2. FOR NODES:
+                   - MERGE each node with unique variable name
+                   - Include 'title' and 'context' properties
+                   - Replace Polish characters (ą→a, ć→c, ę→e, ł→l, ń→n, ó→o, ś→s, ź→z, ż→z)
+                   - Use ONLY ASCII characters
+                   - Escape single quotes in text with backslash (\')
+
+                3. FOR RELATIONSHIPS:
+                   - MERGE between existing node variables
+                   - Use ONLY allowed relationship types
+                   - Direction matters (A→B ≠ B→A)
+
+                4. VARIABLE NAMES:
+                   - Must be UNIQUE across entire query
+                   - Recommended pattern: (node1), (node2), (person1), (dept1), etc.
+                   - NEVER reuse variables - this causes errors
+
+                EXAMPLE OUTPUT:
+                MERGE (node1:Person {{title: 'John Smith', context: 'Professor at UW'}})|MERGE (node2:Department {{title: 'Computer Science', context: 'CS department'}})|MERGE (node1)-[:works_in]->(node2)
+
+                OUTPUT MUST BE EXACTLY IN THIS FORMAT:
+                MERGE (...) [|MERGE (...)]* [|MERGE (...)-[:...]->(...)]*
+                NO OTHER TEXT OR CHARACTERS ALLOWED!
+
+            """
         )
 
     def _build_pipe_graph(self) -> None:
@@ -101,3 +118,7 @@ class LLMPipe:
             config={"configurable": {"thread_id": 1}},
         )
         return result["generated_cypher"]
+
+
+
+
