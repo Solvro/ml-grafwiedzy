@@ -1,1 +1,0 @@
-'''Skrypt do ładowania danych do grafu'''
