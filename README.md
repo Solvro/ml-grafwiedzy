@@ -19,7 +19,47 @@ curl -sSL https://install.python-poetry.org | python3 -
 
 ## Jak używać?
 
-### Instalacja zależności
+### Docker
+#### Setup
+Stwórz plik `.env` na bazie `.env.example` i uzupełnij kluczem API DeepSeek oraz danymi logowania Neo4j, następnie uruchom:
+```sh
+make rebuild
+```
+
+#### Budowanie grafu
+Umieść pliki, których chcesz użyć w folderze `./data`, a następnie uruchom:
+```sh
+make run-pipe
+```
+
+#### Korzystanie z RAG
+Uruchom
+```sh
+make run-rag
+```
+Uruchomi się interaktywna powłoka w której możesz korzystać z chatu.
+
+#### Eksploracja Neo4j
+Podczas działania obrazu Neo4j, webowy interface Neo4j jest dostępny pod adresem `http://localhost:7474/`.
+Aby skorzystać z bazy danych bez uruchamiania reszty aplikacji uruchom:
+```sh
+make run-neo4j
+```
+
+#### Zatrzymanie aplikacji
+Aby zatrzymać wszystkie działające obrazy aplikacji uruchom:
+```sh
+make stop
+```
+
+#### Zresetowanie aplikacji (bazy danych)
+Aby wyczyścić dane zapisane w nazwanych wolumenach aplikacji (w tym dane w bazie danych oraz jej konfiguracja), uruchom:
+```sh
+make clear-volumes
+```
+
+### Bez dockera
+#### Instalacja zależności
 
 Po sklonowaniu repozytorium przejdź do katalogu projektu i uruchom:
 
@@ -27,7 +67,7 @@ Po sklonowaniu repozytorium przejdź do katalogu projektu i uruchom:
 poetry install
 ```
 
-### Uruchamianie środowiska wirtualnego
+#### Uruchamianie środowiska wirtualnego
 
 Aby uruchomić interaktywne środowisko wirtualne, użyj:
 
@@ -35,7 +75,7 @@ Aby uruchomić interaktywne środowisko wirtualne, użyj:
 poetry shell
 ```
 
-### Dodawanie zależności
+#### Dodawanie zależności
 
 Aby dodać nową zależność do projektu, użyj:
 
@@ -49,7 +89,7 @@ Przykład:
 poetry add numpy
 ```
 
-### Uruchamianie skryptów
+#### Uruchamianie skryptów
 
 Jeśli masz plik `main.py`, możesz go uruchomić bezpośrednio przez Poetry:
 
@@ -58,7 +98,7 @@ poetry run python main.py
 ```
 
 
-### Jak odpalic RAGa ? 
+#### Jak odpalic RAGa ? 
 Stwórz plik .env w folderze głównym i wklej klucz api do deepseeka, i cridentiale neo4j :
 ```
 DEEPSEEK_API_KEY=
