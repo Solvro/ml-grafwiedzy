@@ -7,9 +7,21 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+langchain = "^0.3.23"
+langgraph = "^0.3.28"
+langchain-neo4j = "^0.4.0"
+numpy = "^2.2.4"
+dotenv = "^0.9.9"
+py2neo = "^2021.2.4"
+python-dotenv = "^1.1.0"
+langchain-openai = "^0.3.14"
+langchain-core = "^0.3.55"
+langchain-community = "^0.3.23"
+pypdf = "^5.4.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
+pytest = "^8.3.5"
 
 [build-system]
 requires = ["poetry-core"]
@@ -17,3 +29,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88  # Można dostosować
+
+[tool.poetry.scripts]
+rag = "src.topwr_ml.chatbot.main:main"
