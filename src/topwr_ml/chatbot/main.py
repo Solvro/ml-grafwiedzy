@@ -2,6 +2,7 @@ from .rag import RAG
 from dotenv import load_dotenv
 from os import environ
 
+
 def main():
     load_dotenv(".env")
     API_KEY = environ.get("DEEPSEEK_API_KEY")
@@ -15,6 +16,7 @@ def main():
         neo4j_username=NEO4J_USERNAME,
         neo4j_password=NEO4J_PASSWORD
     )
+
 
     while(True):
         
