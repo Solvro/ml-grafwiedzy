@@ -18,6 +18,13 @@ langchain-openai = "^0.3.14"
 langchain-core = "^0.3.55"
 langchain-community = "^0.3.23"
 pypdf = "^5.4.0"
+pdf2image = "^1.17.0"
+pytesseract = "^0.3.13"
+requests = "^2.32.3"
+beautifulsoup4 = "^4.13.4"
+pandas = "^2.2.3"
+opencv-python = "^4.11.0.86"
+imutils = "^0.5.4"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
